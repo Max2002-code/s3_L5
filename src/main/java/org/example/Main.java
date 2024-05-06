@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
 
 // Enum per rappresentare la periodicità delle riviste
 enum Periodicity {
@@ -18,7 +19,7 @@ enum Periodicity {
 abstract class CatalogItem implements Serializable {
     private String isbn;
     private String title;
-    private int publicationYear;
+    int publicationYear;
 
     // Costruttore
     public CatalogItem(String isbn, String title, int publicationYear) {
@@ -71,8 +72,8 @@ class Book extends CatalogItem {
     private int numPages;
 
     // Costruttore
-    public Book(String isbn, String title, int publicationYear, String author, String genre, int numPages) {
-        super(isbn, title, publicationYear);
+    public Book(String isbn, String title, int punlicationyear) {
+        super(isbn, title, punlicationyear);
         this.author = author;
         this.genre = genre;
         this.numPages = numPages;
@@ -157,16 +158,145 @@ class LibraryArchive {
     }
 }
 
+class Utente {
+    private String nome;
+    private String cognome;
+    private LocalDate dataDiNascita;
+    private String numeroTessera;
+
+    public Utente(String nome, String cognome, LocalDate dataDiNascita, String numeroTessera) {
+        this.nome = nome;
+        this.cognome = cognome;
+        this.dataDiNascita = dataDiNascita;
+        this.numeroTessera = numeroTessera;
+    }
+
+    // Metodi getter
+    public String getNome() {
+        return nome;
+    }
+
+    public String getCognome() {
+        return cognome;
+    }
+
+    public LocalDate getDataDiNascita() {
+        return dataDiNascita;
+    }
+
+    public String getNumeroTessera() {
+        return numeroTessera;
+    }
+}
+
+abstract class ElementoPrestato {
+    protected String titolo;
+
+    public ElementoPrestato(String titolo) {
+        this.titolo = titolo;
+    }
+
+    // Metodi getter
+    public String getTitolo() {
+        return titolo;
+    }
+
+    // Metodi setter
+    public void setTitolo(String titolo) {
+        this.titolo = titolo;
+    }
+
+    @Override
+    public String toString() {
+        return titolo;
+    }
+}
+
+class Prestito {
+    private Utente utente;
+    private Book elementoPrestato;
+    private LocalDate dataInizioPrestito;
+    private LocalDate dataRestituzionePrevista;
+    private LocalDate dataRestituzioneEffettiva;
+
+    public Prestito(Utente utente, Book elementoPrestato, LocalDate dataInizioPrestito) {
+        this.utente = utente;
+        this.elementoPrestato = elementoPrestato;
+        this.dataInizioPrestito = dataInizioPrestito;
+        this.dataRestituzionePrevista = dataInizioPrestito.plusDays(30);
+    }
+
+    // Metodi getter
+    public Utente getUtente() {
+        return utente;
+    }
+
+    public Book getElementoPrestato() {
+        return elementoPrestato;
+    }
+
+    public LocalDate getDataInizioPrestito() {
+        return dataInizioPrestito;
+    }
+
+    public LocalDate getDataRestituzionePrevista() {
+        return dataRestituzionePrevista;
+    }
+
+    public LocalDate getDataRestituzioneEffettiva() {
+        return dataRestituzioneEffettiva;
+    }
+    public boolean isScaduto() {
+        return LocalDate.now().isAfter(dataRestituzionePrevista);
+    }
+}
+
+class ArchivioPrestiti {
+    private List<Prestito> prestiti;
+
+    public ArchivioPrestiti() {
+        this.prestiti = new ArrayList<>();
+    }
+
+    public void aggiungiPrestito(Prestito prestito) {
+        prestiti.add(prestito);
+    }
+
+    public List<Prestito> ricercaPrestitiUtente(String numeroTessera) {
+        List<Prestito> prestitiUtente = new ArrayList<>();
+        for (Prestito prestito : prestiti) {
+            if (prestito.getUtente().getNumeroTessera().equals(numeroTessera)) {
+                prestitiUtente.add(prestito);
+            }
+        }
+        return prestitiUtente;
+    }
+
+    public List<Prestito> ricercaPrestitiScaduti() {
+        List<Prestito> prestitiScaduti = new ArrayList<>();
+        for (Prestito prestito : prestiti) {
+            if (prestito.isScaduto() && prestito.getDataRestituzioneEffettiva() == null) {
+                prestitiScaduti.add(prestito);
+            }
+        }
+        return prestitiScaduti;
+    }
+}
+
+
+
 // Classe principale per testare le funzionalità dell'archivio
 public class Main {
     public static void main(String[] args) {
+        int publicationYear = 1954;
+
         // Creazione di un archivio
         LibraryArchive archive = new LibraryArchive();
 
         // Aggiunta di un libro e una rivista all'archivio
-        Book book = new Book("978-3-16-148410-0", "Il Signore degli Anelli", 1954, "J.R.R. Tolkien", "Fantasy", 1178);
+        Book book = new Book("978-3-16-148410-0", "Il Signore degli Anelli", publicationYear);
         Magazine magazine = new Magazine("123-456-789", "National Geographic", 2024, 4, Periodicity.MONTHLY);
-        Book book2 = new Book("975-3-15-148410-0", "Il Signore degli Anelli 2", 1954, "J.R.R. Tolkien", "Fantasy", 1179);
+        Book book2 = new Book("975-3-15-148410-0", "Il Signore degli Anelli 2", publicationYear);
         archive.addItem(book);
         archive.addItem(magazine);
         archive.addItem(book2);
@@ -207,5 +337,34 @@ public class Main {
         // Verifica se il caricamento ha funzionato
         List<CatalogItem> loadedItems = loadedArchive.getItems();
         System.out.println("Numero di elementi nell'archivio caricato: " + loadedItems.size());
+
+        // Creazione di alcuni utenti, elementi prestati e prestiti
+        Utente utente = new Utente("Mario", "Rossi", LocalDate.of(1990, 5, 15), "0001");
+        Book book3 = new Book("Il signore degli anelli", "J.R.R. Tolkien", publicationYear);
+        Prestito prestito = new Prestito(utente, book3, LocalDate.of(2024, 4, 1));
+
+        // Aggiunta del prestito all'archivio
+        ArchivioPrestiti archivioPrestiti = new ArchivioPrestiti();
+        archivioPrestiti.aggiungiPrestito(prestito);
+
+        // Stampa dei dettagli del prestito
+        System.out.println("\nDettagli del prestito:");
+        System.out.println("- Utente: " + prestito.getUtente().getNome() + " " + prestito.getUtente().getCognome());
+        System.out.println("- Elemento prestato: " + prestito.getElementoPrestato().getTitle());
+        System.out.println("- Data inizio prestito: " + prestito.getDataInizioPrestito());
+        System.out.println("- Data restituzione prevista: " + prestito.getDataRestituzionePrevista());
+
+        // Ricerca degli elementi in prestito per l'utente specifico
+        String numeroTesseraUtente = "0001";
+        System.out.println("\nPrestiti per l'utente con numero tessera " + numeroTesseraUtente + ":");
+        for (Prestito p : archivioPrestiti.ricercaPrestitiUtente(numeroTesseraUtente)) {
+            System.out.println("- " + p.getElementoPrestato().getTitle() + ", inizio prestito: " + p.getDataInizioPrestito());
+        }
+
+        // Ricerca dei prestiti scaduti e non ancora restituiti
+        System.out.println("\nPrestiti scaduti e non ancora restituiti:");
+        for (Prestito p : archivioPrestiti.ricercaPrestitiScaduti()) {
+            System.out.println("- " + p.getElementoPrestato().getTitle() + ", data restituzione prevista: " + p.getDataRestituzionePrevista());
+        }
     }
 }
