@@ -72,8 +72,8 @@ class Book extends CatalogItem {
     private int numPages;
 
     // Costruttore
-    public Book(String isbn, String title, int punlicationyear) {
-        super(isbn, title, punlicationyear);
+    public Book(String isbn, String title, int publicationYear, String author, String genre, int numPages) {
+        super(isbn, title, publicationYear);
         this.author = author;
         this.genre = genre;
         this.numPages = numPages;
@@ -283,8 +283,6 @@ class ArchivioPrestiti {
     }
 }
 
-
-
 // Classe principale per testare le funzionalità dell'archivio
 public class Main {
     public static void main(String[] args) {
@@ -294,9 +292,9 @@ public class Main {
         LibraryArchive archive = new LibraryArchive();
 
         // Aggiunta di un libro e una rivista all'archivio
-        Book book = new Book("978-3-16-148410-0", "Il Signore degli Anelli", publicationYear);
+        Book book = new Book("978-3-16-148410-0", "Il Signore degli Anelli", publicationYear, "J.R.R. Tolkien", "Fantasy", 1178);
         Magazine magazine = new Magazine("123-456-789", "National Geographic", 2024, 4, Periodicity.MONTHLY);
-        Book book2 = new Book("975-3-15-148410-0", "Il Signore degli Anelli 2", publicationYear);
+        Book book2 = new Book("975-3-15-148410-0", "Il Signore degli Anelli 2", publicationYear, "J.R.R. Tolkien", "Fantasy", 800);
         archive.addItem(book);
         archive.addItem(magazine);
         archive.addItem(book2);
@@ -340,7 +338,7 @@ public class Main {
 
         // Creazione di alcuni utenti, elementi prestati e prestiti
         Utente utente = new Utente("Mario", "Rossi", LocalDate.of(1990, 5, 15), "0001");
-        Book book3 = new Book("Il signore degli anelli", "J.R.R. Tolkien", publicationYear);
+        Book book3 = new Book("Il signore degli anelli", "J.R.R. Tolkien", publicationYear, "J.R.R. Tolkien", "Fantasy", 1178);
         Prestito prestito = new Prestito(utente, book3, LocalDate.of(2024, 4, 1));
 
         // Aggiunta del prestito all'archivio
